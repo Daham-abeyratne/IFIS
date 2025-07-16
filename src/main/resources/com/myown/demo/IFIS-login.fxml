@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<Pane fx:controller="com.myown.demo.IFISController" maxHeight="450.0" maxWidth="600.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <ImageView fitHeight="450.0" fitWidth="600.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../images/T.png" />
+         </image>
+      </ImageView>
+      <TextField fx:id="pathid" layoutX="73.0" layoutY="329.0" prefHeight="25.0" prefWidth="405.0" promptText="enter the file path" />
+      <Button fx:id="import_button" layoutX="478.0" layoutY="329.0" mnemonicParsing="false" onAction="#handle_import" prefHeight="25.0" prefWidth="70.0" text="Import" />
+      <Label fx:id="warning" style="-fx-text-fill: red;" layoutX="73.0" layoutY="360.0" prefHeight="21.0" prefWidth="239.0" text="*" />
+   </children>
+</Pane>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.IFISController">
+
+   <top>
+      <HBox spacing="10" padding="10">
+         <Label text="File Path:"/>
+         <TextField fx:id="pathInput" prefWidth="400"/>
+         <Button text="Import File" onAction="#handleImport"/>
+         <Button text="Delete Invalid" onAction="#handleDeleteInvalid"/>
+         <Button text="Calculate Tax" onAction="#handleCalculateTax"/>
+      </HBox>
+   </top>
+
+   <center>
+      <TableView fx:id="table" editable="true">
+         <columns>
+            <TableColumn fx:id="codeCol" text="Code"/>
+            <TableColumn fx:id="descCol" text="Description"/>
+            <TableColumn fx:id="dateCol" text="Date"/>
+            <TableColumn fx:id="incomeCol" text="Income"/>
+            <TableColumn fx:id="whtCol" text="WHT"/>
+            <TableColumn fx:id="checksumCol" text="Checksum"/>
+         </columns>
+      </TableView>
+   </center>
+
+   <bottom>
+      <HBox spacing="20" padding="10">
+         <Label fx:id="totalLabel" text="Total: 0"/>
+         <Label fx:id="validLabel" text="Valid: 0"/>
+         <Label fx:id="invalidLabel" text="Invalid: 0"/>
+         <Label fx:id="taxLabel" text="Tax Payable: Rs 0.00"/>
+      </HBox>
+   </bottom>
+</BorderPane>
