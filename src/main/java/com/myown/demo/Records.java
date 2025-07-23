@@ -10,79 +10,73 @@ public class Records {
     private boolean valid;
 
     public Records(String incomeCode, String description, String date, double incomeAmount, double withHoldingTax, int checksum) {
+        setIncomeCode(incomeCode);
+        setDescription(description);
+        setDate(date);
+        setIncomeAmount(incomeAmount);
+        setWithHoldingTax(withHoldingTax);
+        setChecksum(checksum);
+    }
+
+    public static int calculateChecksum(String incomeCode, String description, String date, double incomeAmount, double withHoldingTax) {
+        return (incomeCode + description + date).length() + (int) (incomeAmount + withHoldingTax);
+    }
+
+    public String getIncomeCode() { return incomeCode; }
+    public void setIncomeCode(String incomeCode) {
         this.incomeCode = incomeCode;
-        this.description = description;
-        this.date = date;
-        this.incomeAmount = incomeAmount;
-        this.withHoldingTax = withHoldingTax;
-        this.checksum = checksum;
-        this.valid = false;
+        isIncomeCodeValid();
     }
 
-    public String getIncomeCode() {
-        return incomeCode;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public double getIncomeAmount() {
-        return incomeAmount;
-    }
-
-    public double getWithHoldingTax() {
-        return withHoldingTax;
-    }
-
-    public int getChecksum() {
-        return checksum;
-    }
-
-    public boolean isValid() {
-        return valid;
-    }
-
+    public String getDescription() { return description; }
     public void setDescription(String description) {
         this.description = description;
+        isDescriptionValid();
     }
 
-    public void setDate(String date) {
-        this.date = date;
-    }
-    public void setIncomeAmount(double incomeAmount) {
-        this.incomeAmount = incomeAmount;
-    }
-    public void setWithHoldingTax(double withHoldingTax) {
-        this.withHoldingTax = withHoldingTax;
-    }
-    public void setChecksum(int checksum) {
-        this.checksum = checksum;
-    }
-    public void setValid(boolean valid) {
-        this.valid = valid;
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
+
+    public double getIncomeAmount() { return incomeAmount; }
+    public void setIncomeAmount(double incomeAmount) { this.incomeAmount = incomeAmount; }
+
+    public double getWithHoldingTax() { return withHoldingTax; }
+    public void setWithHoldingTax(double withHoldingTax) { this.withHoldingTax = withHoldingTax; }
+
+    public int getChecksum() { return checksum; }
+    public void setChecksum(int checksum) { this.checksum = checksum; }
+
+    public boolean isValid() { return valid; }
+    public void setValid(boolean valid) { this.valid = valid; }
+
+    public void isDescriptionValid(){
+        if(this.description == null || this.description.length() > 20 || !this.valid){
+            setValid(false);
+        }else {
+            setValid(true);
+        }
     }
 
-    public static int calculateChecksum(String code,String description,String date,double incomeAmount,double withHoldingTax) {
-        String line = code + description + date + incomeAmount + withHoldingTax;
-        int uppercaseCount = 0;
-        int lowercaseCount = 0;
+    public void isIncomeCodeValid(){
+        if(this.incomeCode == null || this.incomeCode.length() !=5 ){
+            setValid(false);
+        }
+        int letterCount = 0;
         int digitCount = 0;
 
-        for(char ch : line.toCharArray()) {
-            if(Character.isUpperCase(ch)) {
-                uppercaseCount++;
-            }else if(Character.isLowerCase(ch)) {
-                lowercaseCount++;
-            }else if(Character.isDigit(ch)) {
+        for (int i = 0; i < 5; i++) {
+            char ch = this.incomeCode.charAt(i);
+            if (Character.isLetter(ch)) {
+                letterCount++;
+            } else if (Character.isDigit(ch)) {
                 digitCount++;
+            } else {
+                setValid(false); // invalid char
+                return;
             }
-            return uppercaseCount + lowercaseCount + digitCount;
+        }
+        if(letterCount == 2 && digitCount == 3){
+            setValid(true);
         }
     }
 }
-
