@@ -10,7 +10,7 @@ import java.io.IOException;
 public class IFISApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(IFISApplication.class.getResource("IFIS-login.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(IFISApplication.class.getResource("Login.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 600, 450);
         stage.setTitle("Income Tax File Manager");
         stage.setScene(scene);

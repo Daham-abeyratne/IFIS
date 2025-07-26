@@ -16,6 +16,7 @@ public class Records {
         setIncomeAmount(incomeAmount);
         setWithHoldingTax(withHoldingTax);
         setChecksum(checksum);
+        setValid();
     }
 
     public static int calculateChecksum(String incomeCode, String description, String date, double incomeAmount, double withHoldingTax) {
@@ -25,41 +26,69 @@ public class Records {
     public String getIncomeCode() { return incomeCode; }
     public void setIncomeCode(String incomeCode) {
         this.incomeCode = incomeCode;
-        isIncomeCodeValid();
     }
 
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
     public void setDescription(String description) {
         this.description = description;
-        isDescriptionValid();
     }
 
-    public String getDate() { return date; }
-    public void setDate(String date) { this.date = date; }
+    public String getDate() {
+        return date;
+    }
+    public void setDate(String date) {
+        this.date = date;
+    }
 
-    public double getIncomeAmount() { return incomeAmount; }
-    public void setIncomeAmount(double incomeAmount) { this.incomeAmount = incomeAmount; }
+    public double getIncomeAmount() {
+        return incomeAmount;
+    }
+    public void setIncomeAmount(double incomeAmount) {
+        this.incomeAmount = incomeAmount;
+    }
 
-    public double getWithHoldingTax() { return withHoldingTax; }
-    public void setWithHoldingTax(double withHoldingTax) { this.withHoldingTax = withHoldingTax; }
+    public double getWithHoldingTax() {
+        return withHoldingTax;
+    }
+    public void setWithHoldingTax(double withHoldingTax) {
+        this.withHoldingTax = withHoldingTax;
+    }
 
-    public int getChecksum() { return checksum; }
-    public void setChecksum(int checksum) { this.checksum = checksum; }
+    public int getChecksum() {
+        return checksum;
+    }
+    public void setChecksum(int checksum) {
+        this.checksum = checksum;
+    }
 
-    public boolean isValid() { return valid; }
-    public void setValid(boolean valid) { this.valid = valid; }
-
-    public void isDescriptionValid(){
-        if(this.description == null || this.description.length() > 20 || !this.valid){
-            setValid(false);
-        }else {
-            setValid(true);
+    public boolean isValid() {
+        return valid; }
+    public void setValid() {
+        if(isDescriptionValid() && isIncomeCodeValid() && isDateValid() && isChecksumValid() && isIncomeAmountValid()){
+            this.valid = true;
+        }else{
+            this.valid = false;
         }
     }
 
-    public void isIncomeCodeValid(){
+    public boolean isChecksumValid(){
+        int calculatedChecksum = RecordsWrapper.calculateItemChecksum(getIncomeCode(), getDescription(), getDate(), getIncomeAmount(), getWithHoldingTax());
+        return calculatedChecksum == checksum;
+    }
+
+    public boolean isDescriptionValid(){
+        if(this.description == null || this.description.length() > 20){
+            return false;
+        }else {
+            return true;
+        }
+    }
+
+    public boolean isIncomeCodeValid(){
         if(this.incomeCode == null || this.incomeCode.length() !=5 ){
-            setValid(false);
+            return false;
         }
         int letterCount = 0;
         int digitCount = 0;
@@ -70,13 +99,30 @@ public class Records {
                 letterCount++;
             } else if (Character.isDigit(ch)) {
                 digitCount++;
-            } else {
-                setValid(false); // invalid char
-                return;
+            } else {                        // invalid char
+                return false;
             }
         }
         if(letterCount == 2 && digitCount == 3){
-            setValid(true);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public boolean isDateValid(){
+        if(this.date == null || !this.date.matches("^\\d{2}/\\d{2}/\\d{4}$")){
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    public boolean isIncomeAmountValid(){
+        if(this.incomeAmount <= 0 ){
+            return false;
+        }else {
+            return true;
         }
     }
 }

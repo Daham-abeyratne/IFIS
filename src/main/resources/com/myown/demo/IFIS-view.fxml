@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<Pane prefHeight="613.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.myown.demo.TableViewController">
-   <children>
-      <TableView fx:id="recordsTable" editable="true" layoutX="13.0" layoutY="14.0" prefHeight="281.0" prefWidth="925.0">
+<BorderPane prefHeight="613.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.myown.demo.TableViewController">
+   <top>
+      <TableView fx:id="recordsTable" editable="true" prefHeight="281.0">
          <columns>
             <TableColumn fx:id="incomeCodeColumn" prefWidth="100.0" text="Income Code" />
             <TableColumn fx:id="descriptionColumn" prefWidth="206.20001220703125" text="Description" />
@@ -16,52 +17,158 @@
             <TableColumn fx:id="checksumColumn" prefWidth="109.20001220703125" text="Checksum" />
             <TableColumn fx:id="validColumn" prefWidth="115.39996337890625" text="Valid" />
          </columns>
+         <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+         </columnResizePolicy>
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </BorderPane.margin>
       </TableView>
-      <Pane layoutX="14.0" layoutY="317.0" prefHeight="104.0" prefWidth="260.0" style="-fx-background-color: #e5e5e5;">
+   </top>
+   <center>
+      <HBox spacing="10.0">
          <children>
-            <Label layoutX="14.0" layoutY="14.0" prefHeight="21.0" prefWidth="161.0" text="Total imported records ">
-               <font>
-                  <Font size="15.0" />
-               </font>
-            </Label>
-            <Label layoutX="14.0" layoutY="42.0" prefHeight="21.0" prefWidth="126.0" text="Total valid records ">
-               <font>
-                  <Font size="15.0" />
-               </font>
-            </Label>
-            <Label layoutX="14.0" layoutY="69.0" prefHeight="21.0" prefWidth="139.0" text="Total invalid records">
-               <font>
-                  <Font size="15.0" />
-               </font>
-            </Label>
-            <Label layoutX="173.0" layoutY="73.0" text="::" />
-            <Label layoutX="174.0" layoutY="43.0" text="::" />
+            <!-- Statistics Panel -->
+            <VBox maxWidth="260.0" minWidth="260.0" spacing="5.0" style="-fx-background-color: #e5e5e5; -fx-padding: 15;">
+               <children>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                        <Label prefWidth="170.0" text="Total imported records:">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="importedRecordCount">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                        <Label prefWidth="170.0" text="Total valid records:">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="validRecordCount">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                     <children>
+                        <Label prefWidth="170.0" text="Total invalid records:">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="invalidRecordCount">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox prefHeight="35.0" prefWidth="230.0">
+                     <VBox.margin>
+                        <Insets top="25.0" />
+                     </VBox.margin>
+                     <children>
+                        <Label prefHeight="28.0" prefWidth="134.0" text="Total Income:">
+                           <font>
+                              <Font name="System Bold" size="15.0" />
+                           </font></Label>
+                        <Label fx:id="totalIncomeValue" prefHeight="26.0" prefWidth="110.0">
+                           <font>
+                              <Font name="System Bold" size="15.0" />
+                           </font></Label>
+                     </children>
+                  </HBox>
+                  <HBox prefHeight="35.0" prefWidth="230.0">
+                     <children>
+                        <Label prefHeight="21.0" prefWidth="135.0" text="Paid Total WHT:">
+                           <font>
+                              <Font name="System Bold" size="15.0" />
+                           </font></Label>
+                        <Label fx:id="totalWithholdingTaxValue" prefHeight="26.0" prefWidth="121.0">
+                           <font>
+                              <Font name="System Bold" size="15.0" />
+                           </font></Label>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+
+            <!-- Invalid Reasons Panel -->
+            <VBox spacing="5.0" style="-fx-background-color: #e5e5e5; -fx-padding: 15;">
+               <children>
+                  <Label text="Reasons for not getting validated">
+                     <font>
+                        <Font size="17.0" />
+                     </font>
+                  </Label>
+                  <ScrollPane fitToWidth="true" prefHeight="150.0">
+                     <content>
+                        <Label fx:id="invalidReasons" alignment="TOP_LEFT" text="*" wrapText="true" />
+                     </content>
+                  </ScrollPane>
+               </children>
+               <HBox.hgrow>
+                  <Priority fx:constant="ALWAYS" />
+               </HBox.hgrow>
+            </VBox>
+
+            <!-- Buttons Panel -->
+            <VBox maxWidth="200.0" minWidth="200.0" spacing="10.0">
+               <children>
+                  <Button fx:id="deleteInvalidRecords" onAction="#OnDeleteButtonClick" prefWidth="180.0" text="Delete Invalid Records" textFill="RED" />
+                  <Button onAction="#OnValidateButtonClick" prefWidth="180.0" text="Validate Records" />
+                  <Button fx:id="updateChecksum" onAction="#OnUpdateButtonClick" prefWidth="180.0" text="Update Checksum" />
+                  <Button mnemonicParsing="false" prefHeight="31.0" prefWidth="182.0" text="Export CSV" textFill="#4fd434">
+                     <VBox.margin>
+                        <Insets top="20.0" />
+                     </VBox.margin>
+                     <font>
+                        <Font name="System Bold Italic" size="12.0" />
+                     </font>
+                  </Button>
+               </children>
+            </VBox>
          </children>
-      </Pane>
-      <Label layoutX="189.0" layoutY="330.0" text="::" />
-      <Label fx:id="importedRecordCount" layoutX="204.0" layoutY="330.0" prefHeight="21.0" prefWidth="68.0">
-         <font>
-            <Font size="15.0" />
-         </font>
-      </Label>
-      <Label fx:id="validRecordCount" layoutX="202.0" layoutY="359.0" prefHeight="21.0" prefWidth="68.0">
-         <font>
-            <Font size="15.0" />
-         </font>
-      </Label>
-      <Label fx:id="invalidRecordCount" layoutX="206.0" layoutY="389.0" prefHeight="21.0" prefWidth="68.0">
-         <font>
-            <Font size="15.0" />
-         </font>
-      </Label>
-      <Button fx:id="deleteInvalidRecords" layoutX="721.0" layoutY="318.0" mnemonicParsing="false" onAction="#OnDeleteButtonClick" prefHeight="31.0" prefWidth="179.0" text="Delete Invalid Records" textFill="RED" />
-      <Button fx:id="Update" layoutX="722.0" layoutY="410.0" mnemonicParsing="false" onAction="#OnUpdateButtonClick" prefHeight="31.0" prefWidth="179.0" text="Update" />
-      <Button layoutX="721.0" layoutY="364.0" mnemonicParsing="false" onAction="#OnValidateChecksumButtonClick" prefHeight="31.0" prefWidth="179.0" text="Validate Records" />
-      <Pane layoutX="286.0" layoutY="300.0" prefHeight="224.0" prefWidth="419.0" style="-fx-background-color: #e5e5e5;" />
-      <Label layoutX="365.0" layoutY="305.0" prefHeight="26.0" prefWidth="269.0" text="Resons for not not getting validate">
-         <font>
-            <Font size="17.0" />
-         </font>
-      </Label>
-   </children>
-</Pane>
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </BorderPane.margin>
+      </HBox>
+   </center>
+   <bottom>
+      <HBox prefHeight="100.0" prefWidth="200.0" style="-fx-background-color: #e5e5e5;" BorderPane.alignment="CENTER">
+         <children>
+            <Label prefHeight="46.0" prefWidth="120.0" text="Tax payable  ::">
+               <HBox.margin>
+                  <Insets left="30.0" right="20.0" top="25.0" />
+               </HBox.margin>
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+            </Label>
+            <Label fx:id="taxPayable" prefHeight="46.0" prefWidth="542.0">
+               <HBox.margin>
+                  <Insets right="20.0" top="25.0" />
+               </HBox.margin>
+               <font>
+                  <Font name="System Bold" size="20.0" />
+               </font>
+            </Label>
+            <Button mnemonicParsing="false" onAction="#OnCalculateButtonClick" prefHeight="31.0" prefWidth="193.0" text="Calculate">
+               <HBox.margin>
+                  <Insets top="30.0" />
+               </HBox.margin>
+            </Button>
+         </children>
+      </HBox>
+   </bottom>
+</BorderPane>

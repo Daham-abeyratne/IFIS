@@ -103,23 +103,6 @@ public class IFISController {
 
                         // Create record with calculated checksum
                         Records record = new Records(incomeCode, description, date, incomeAmount, withHoldingTax, checksum);
-                        // Calculate checksum
-                        int calculatedChecksum = RecordsWrapper.calculateItemChecksum(incomeCode, description, date, incomeAmount, withHoldingTax);
-
-
-                        // If CSV has 6 columns, the last one might be the expected checksum
-                        if (values.length >= 6) {
-                            try {
-                                record.setValid(calculatedChecksum == checksum);
-                            } catch (NumberFormatException e) {
-                                record.setValid(true); // Default to valid if checksum column is not numeric
-                            }
-                        } else {
-                            record.setValid(true); // Default to valid if no checksum column
-                        }
-                        record.isIncomeCodeValid();
-                        record.isDescriptionValid();
-
                         recordsList.add(record);
                     } catch (NumberFormatException e) {
                         // Skip invalid numeric data

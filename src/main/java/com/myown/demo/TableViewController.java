@@ -11,6 +11,7 @@ import javafx.util.StringConverter;
 import javafx.util.converter.DoubleStringConverter;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -27,6 +28,10 @@ public class TableViewController implements Initializable {
     @FXML private Label importedRecordCount;
     @FXML private Label validRecordCount;
     @FXML private Label invalidRecordCount;
+    @FXML private Label invalidReasons;
+    @FXML private Label totalIncomeValue;
+    @FXML private Label totalWithholdingTaxValue;
+    @FXML private Label taxPayable;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -40,10 +45,79 @@ public class TableViewController implements Initializable {
         checksumColumn.setCellValueFactory(new PropertyValueFactory<>("checksum"));
         validColumn.setCellValueFactory(new PropertyValueFactory<>("valid"));
 
+        incomeCodeColumn.setCellFactory(col -> new TextFieldTableCell<RecordsWrapper, String>(new StringConverter<String>() {
+            @Override
+            public String toString(String object) {
+                return object == null ? "" : object;
+            }
+
+            @Override
+            public String fromString(String string) {
+                return string;
+            }
+        }) {
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+
+                    // Check if this income code is duplicate and highlight
+                    if (isIncomeCodeDuplicate(item, getIndex())) {
+                        setStyle("-fx-background-color: #ffcccc; -fx-text-fill: red; -fx-font-weight: bold;");
+                    } else {
+                        setStyle(""); // Reset to default style
+                    }
+                }
+            }
+        });
+
         descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         dateColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         incomeAmountColumn.setCellFactory(TextFieldTableCell.forTableColumn(new TwoDecimalDoubleConverter()));
         withholdingTaxColumn.setCellFactory(TextFieldTableCell.forTableColumn(new TwoDecimalDoubleConverter()));
+
+        incomeCodeColumn.setOnEditCommit(e -> {
+            String tempCode = e.getOldValue();
+            String newCode = e.getNewValue();
+            Records record = e.getRowValue().getRecord();
+
+            // First check if the new code format is valid
+            record.setIncomeCode(newCode);
+            if (!record.isIncomeCodeValid()) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Income Code Error");
+                alert.setContentText("Income code must be exactly 5 characters with 2 letters and 3 digits");
+                alert.showAndWait();
+                record.setIncomeCode(tempCode);
+                updateSingleRowChecksum(record);
+                return;
+            }
+
+            // Then check for duplicates
+            boolean isDuplicate = false;
+            for (RecordsWrapper w : recordsTable.getItems()) {
+                if (w.getRecord() != record && w.getIncomeCode().equals(newCode)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+
+            if (isDuplicate) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Duplicate Income Code");
+                alert.setHeaderText("Cannot duplicate income code");
+                alert.showAndWait();
+                record.setIncomeCode(tempCode);
+            }
+
+            // Always update checksum and refresh (this handles both success and failure cases)
+            updateSingleRowChecksum(record);
+        });
 
 
         descriptionColumn.setOnEditCommit(e -> {
@@ -66,15 +140,14 @@ public class TableViewController implements Initializable {
             String tempdate = e.getOldValue();
             Records record = e.getRowValue().getRecord();
             record.setDate(e.getNewValue());
-            if (record.getDate().matches("^\\d{2}/\\d{2}/\\d{4}$")){
-                updateSingleRowChecksum(record);
-            }
-            else{
+            if(!record.isDateValid()){
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Date format error");
                 alert.setContentText("The date should be in dd/mm/yyyy format");
                 alert.showAndWait();
                 record.setDate(tempdate);
+                updateSingleRowChecksum(record);
+            }else{
                 updateSingleRowChecksum(record);
             }
         });
@@ -82,23 +155,27 @@ public class TableViewController implements Initializable {
         incomeAmountColumn.setOnEditCommit(e -> {
             Double tempIncomeAmount = e.getOldValue();
             Records record = e.getRowValue().getRecord();
-            record.setIncomeAmount(e.getNewValue());
-            if(record.getIncomeAmount()<=0){
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Income Amount error");
-                alert.setContentText("The income amount can not be a negative or zero");
-                alert.showAndWait();
+            if(e.getNewValue() != null) {
+                record.setIncomeAmount(e.getNewValue());
+                if (!record.isIncomeAmountValid()) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Income Amount error");
+                    alert.setContentText("The income amount can not be a negative or zero and must be a double");
+                    alert.showAndWait();
+                    record.setIncomeAmount(tempIncomeAmount);
+                    updateSingleRowChecksum(record);
+                } else {
+                    updateSingleRowChecksum(record);
+                }
+            }else{
                 record.setIncomeAmount(tempIncomeAmount);
-                updateSingleRowChecksum(record);
-            }
-            else {
-                updateSingleRowChecksum(record);
             }
         });
 
         withholdingTaxColumn.setOnEditCommit(e -> {
             Records record = e.getRowValue().getRecord();
             record.setWithHoldingTax(e.getNewValue());
+
             updateSingleRowChecksum(record);
         });
 
@@ -116,6 +193,7 @@ public class TableViewController implements Initializable {
         });
 
         recordsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        recordsTable.refresh();
     }
 
     public class TwoDecimalDoubleConverter extends StringConverter<Double> {
@@ -137,36 +215,84 @@ public class TableViewController implements Initializable {
     public void setRecordsData(List<Records> recordsData) {
         ObservableList<RecordsWrapper> data = FXCollections.observableArrayList();
         int total = 0, valid = 0, invalid = 0;
+        double totalIncome = 0.00, totalWHT = 0.00;
 
         for (Records record : recordsData) {
             data.add(new RecordsWrapper(record));
             total++;
             if (record.isValid()) valid++;
             else invalid++;
-        }
 
+            // Calculate totals
+            totalIncome += record.getIncomeAmount();
+            totalWHT += record.getWithHoldingTax();
+        }
         recordsTable.setItems(data);
         importedRecordCount.setText(String.valueOf(total));
         validRecordCount.setText(String.valueOf(valid));
         invalidRecordCount.setText(String.valueOf(invalid));
+
+        // Set income totals
+        totalIncomeValue.setText(String.format("%.2f", totalIncome));
+        totalWithholdingTaxValue.setText(String.format("%.2f", totalWHT));
     }
 
     @FXML
-    private void OnValidateChecksumButtonClick() {
+    private void OnValidateButtonClick() {
+        List<String> allInvalidReasons = new ArrayList<>();
+
+        for (RecordsWrapper wrapper : recordsTable.getItems()) {
+            Records r = wrapper.getRecord();
+            // to validate all fields
+            r.setValid();
+
+            // If record is invalid, collect the specific reasons
+            if (!r.isValid()) {
+                List<String> recordInvalidReasons = new ArrayList<>();
+
+                if (!r.isIncomeCodeValid()) {
+                    recordInvalidReasons.add("Invalid Income Code");
+                }
+                if (!r.isDescriptionValid()) {
+                    recordInvalidReasons.add("Invalid Description");
+                }
+                if (!r.isDateValid()) {
+                    recordInvalidReasons.add("Invalid Date(dd/mm/yyyy)");
+                }
+                if(!r.isIncomeAmountValid()){
+                    recordInvalidReasons.add("Invalid Income Amount");
+                }
+                if (!r.isChecksumValid()) {
+                    recordInvalidReasons.add("Invalid Checksum");
+                }
+
+                // Add record-specific reasons to the overall list
+                allInvalidReasons.add("Record " + (recordsTable.getItems().indexOf(wrapper) + 1) + ": " +
+                        String.join(", ", recordInvalidReasons));
+            }
+        }
+
+        // Update the invalidReasons label
+        if (allInvalidReasons.isEmpty()) {
+            invalidReasons.setText("All records are valid");
+            invalidReasons.setStyle("-fx-text-fill: green;");
+        } else {
+            invalidReasons.setText(String.join("\n", allInvalidReasons));
+            invalidReasons.setStyle("-fx-text-fill: red;");
+        }
+
+        setRecordsData(recordsTable.getItems().stream().map(RecordsWrapper::getRecord).toList());
+        recordsTable.refresh();
+    }
+
+    @FXML
+    private void OnUpdateButtonClick() {
         for (RecordsWrapper wrapper : recordsTable.getItems()) {
             Records r = wrapper.getRecord();
             int newChecksum = RecordsWrapper.calculateItemChecksum(r.getIncomeCode(), r.getDescription(), r.getDate(), r.getIncomeAmount(), r.getWithHoldingTax());
             r.setChecksum(newChecksum);
-            r.setValid(true);
-            r.isIncomeCodeValid();
-            r.isDescriptionValid();
+            recordsTable.refresh();
         }
-        setRecordsData(recordsTable.getItems().stream().map(RecordsWrapper::getRecord).toList());
-    }
-
-    @FXML
-    private void OnUpdateButtonClick(){
-        return;
     }
 
 //    public void tableEditUpdate(){
@@ -193,5 +319,31 @@ public class TableViewController implements Initializable {
             }
         }
         setRecordsData(validItems.stream().map(RecordsWrapper::getRecord).toList());
+    }
+
+    private boolean isIncomeCodeDuplicate(String incomeCode, int currentRowIndex) {
+        int count = 0;
+        for (int i = 0; i < recordsTable.getItems().size(); i++) {
+            if (recordsTable.getItems().get(i).getRecord().getIncomeCode().equals(incomeCode)) {
+                count++;
+                if (count > 1) {
+                    return true; // Found duplicate
+                }
+            }
+        }
+        return false;
+    }
+
+    @FXML
+    private void OnCalculateButtonClick(){
+        ObservableList<RecordsWrapper> Items = FXCollections.observableArrayList();
+        double totalIncomeamount = 0, totalWithholdingTaxamount = 0;
+        for (RecordsWrapper w : recordsTable.getItems()) {
+            totalIncomeamount += w.getIncomeAmount();
+            totalWithholdingTaxamount += w.getWithholdingTax();
+        }
+        double amt = (totalIncomeamount - 150000)*12/100;
+        double payableTax = amt - totalWithholdingTaxamount;
+        taxPayable.setText(String.format("%.2f", payableTax));
     }
 }

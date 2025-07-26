@@ -2,7 +2,6 @@ package com.myown.demo;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import org.json.JSONObject;
 
 public class RecordsWrapper {
     private final Records record;
