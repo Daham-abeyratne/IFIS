@@ -99,7 +99,7 @@ public class Records {
                 letterCount++;
             } else if (Character.isDigit(ch)) {
                 digitCount++;
-            } else {                        // invalid char
+            } else {       // invalid char
                 return false;
             }
         }

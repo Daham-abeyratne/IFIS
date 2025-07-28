@@ -8,7 +8,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.StringConverter;
-import javafx.util.converter.DoubleStringConverter;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,6 +35,7 @@ public class TableViewController implements Initializable {
     @FXML private Label totalIncomeValue;
     @FXML private Label totalWithholdingTaxValue;
     @FXML private Label taxPayable;
+    @FXML private TextField csvName;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -67,7 +71,7 @@ public class TableViewController implements Initializable {
                     setText(item);
 
                     // Check if this income code is duplicate and highlight
-                    if (isIncomeCodeDuplicate(item, getIndex())) {
+                    if (isIncomeCodeDuplicate(item)) {
                         setStyle("-fx-background-color: #ffcccc; -fx-text-fill: red; -fx-font-weight: bold;");
                     } else {
                         setStyle(""); // Reset to default style
@@ -233,8 +237,9 @@ public class TableViewController implements Initializable {
         invalidRecordCount.setText(String.valueOf(invalid));
 
         // Set income totals
-        totalIncomeValue.setText(String.format("%.2f", totalIncome));
-        totalWithholdingTaxValue.setText(String.format("%.2f", totalWHT));
+        DecimalFormat formatter = new DecimalFormat("#,##0.00");
+        totalIncomeValue.setText(formatter.format(totalIncome));
+        totalWithholdingTaxValue.setText(formatter.format(totalWHT));
     }
 
     @FXML
@@ -321,7 +326,35 @@ public class TableViewController implements Initializable {
         setRecordsData(validItems.stream().map(RecordsWrapper::getRecord).toList());
     }
 
-    private boolean isIncomeCodeDuplicate(String incomeCode, int currentRowIndex) {
+    @FXML
+    private void OnExportButtonClick(){
+        String csvFile = csvName.getText();
+        if(csvFile.isEmpty()){
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Please enter a name!!");
+            alert.show();
+            return;
+        }
+        try (FileWriter writer = new FileWriter(csvFile)) {
+            writer.append("IncomeCode,Description,Date of income, Income Amount, Withholding Tax, Checksum\n");
+            for(RecordsWrapper wrapper : recordsTable.getItems()) {
+                String[] row = {wrapper.getIncomeCode(),wrapper.getDescription(),wrapper.getDate(), String.valueOf(wrapper.getIncomeAmount()), String.valueOf(wrapper.getWithholdingTax()), String.valueOf(wrapper.getChecksum())};
+                writer.append(String.join(",", row));
+                writer.append("\n");
+            }
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(null);
+            alert.setHeaderText("CSV file exported!!");
+            alert.setContentText(null);
+            alert.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isIncomeCodeDuplicate(String incomeCode){
         int count = 0;
         for (int i = 0; i < recordsTable.getItems().size(); i++) {
             if (recordsTable.getItems().get(i).getRecord().getIncomeCode().equals(incomeCode)) {
@@ -344,6 +377,7 @@ public class TableViewController implements Initializable {
         }
         double amt = (totalIncomeamount - 150000)*12/100;
         double payableTax = amt - totalWithholdingTaxamount;
-        taxPayable.setText(String.format("%.2f", payableTax));
+        DecimalFormat formatter = new DecimalFormat("#,##0.00");
+        taxPayable.setText(formatter.format(payableTax));
     }
 }

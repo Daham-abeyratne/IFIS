@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="613.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.myown.demo.TableViewController">
+<BorderPane prefHeight="613.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.myown.demo.TableViewController">
    <top>
       <TableView fx:id="recordsTable" editable="true" prefHeight="281.0">
          <columns>
@@ -128,9 +129,10 @@
                   <Button fx:id="deleteInvalidRecords" onAction="#OnDeleteButtonClick" prefWidth="180.0" text="Delete Invalid Records" textFill="RED" />
                   <Button onAction="#OnValidateButtonClick" prefWidth="180.0" text="Validate Records" />
                   <Button fx:id="updateChecksum" onAction="#OnUpdateButtonClick" prefWidth="180.0" text="Update Checksum" />
-                  <Button mnemonicParsing="false" prefHeight="31.0" prefWidth="182.0" text="Export CSV" textFill="#4fd434">
+                  <TextField fx:id="csvName" prefHeight="15.0" prefWidth="200.0" promptText="Export Name" />
+                  <Button mnemonicParsing="false" onAction="#OnExportButtonClick" prefHeight="31.0" prefWidth="182.0" text="Export CSV" textFill="#4fd434">
                      <VBox.margin>
-                        <Insets top="20.0" />
+                        <Insets />
                      </VBox.margin>
                      <font>
                         <Font name="System Bold Italic" size="12.0" />

@@ -70,7 +70,7 @@ public class IFISController {
         }
     }
 
-    private List<Records> parseCSV(String filePath) throws IOException {
+    public List<Records> parseCSV(String filePath) throws IOException {
         List<Records> recordsList = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -115,7 +115,7 @@ public class IFISController {
         return recordsList;
     }
 
-    private String[] parseCSVLine(String line) {
+    public String[] parseCSVLine(String line) {
         List<String> values = new ArrayList<>();
         boolean inQuotes = false;
         StringBuilder currentValue = new StringBuilder();
