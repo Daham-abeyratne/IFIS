@@ -23,28 +23,6 @@ class RecordsTest {
     }
 
     @Test
-    void calculateChecksum() {
-        // Test Records.calculateChecksum method
-        int expectedChecksum = (validIncomeCode + validDescription + validDate).length() + (int) (validIncomeAmount + validWithHoldingTax);
-        int actualChecksum = Records.calculateChecksum(validIncomeCode, validDescription, validDate, validIncomeAmount, validWithHoldingTax);
-        assertEquals(expectedChecksum, actualChecksum);
-
-        // Test with different values
-        String code = "XY456";
-        String desc = "Salary";
-        String date = "12/31/2023";
-        double income = 500.0;
-        double tax = 100.0;
-        int expected = (code + desc + date).length() + (int) (income + tax);
-        assertEquals(expected, Records.calculateChecksum(code, desc, date, income, tax));
-
-        // Test RecordsWrapper.calculateItemChecksum for comparison
-        int wrapperChecksum = RecordsWrapper.calculateItemChecksum(code, desc, date, income, tax);
-        // These should be different as they use different algorithms
-        assertNotEquals(expected, wrapperChecksum);
-    }
-
-    @Test
     void getIncomeCode() {
         assertEquals(validIncomeCode, validRecord.getIncomeCode());
     }

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+// Controller for managing the records table view with editing, validation, and export functionality
 public class TableViewController implements Initializable {
 
     @FXML private TableView<RecordsWrapper> recordsTable;
@@ -41,6 +42,7 @@ public class TableViewController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         recordsTable.setEditable(true);
 
+        // Set up column data bindings
         incomeCodeColumn.setCellValueFactory(new PropertyValueFactory<>("incomeCode"));
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
@@ -49,6 +51,7 @@ public class TableViewController implements Initializable {
         checksumColumn.setCellValueFactory(new PropertyValueFactory<>("checksum"));
         validColumn.setCellValueFactory(new PropertyValueFactory<>("valid"));
 
+        // Custom cell factory for income code with duplicate highlighting
         incomeCodeColumn.setCellFactory(col -> new TextFieldTableCell<RecordsWrapper, String>(new StringConverter<String>() {
             @Override
             public String toString(String object) {
@@ -70,7 +73,7 @@ public class TableViewController implements Initializable {
                 } else {
                     setText(item);
 
-                    // Check if this income code is duplicate and highlight
+                    // Highlight duplicate income codes in red
                     if (isIncomeCodeDuplicate(item)) {
                         setStyle("-fx-background-color: #ffcccc; -fx-text-fill: red; -fx-font-weight: bold;");
                     } else {
@@ -80,17 +83,19 @@ public class TableViewController implements Initializable {
             }
         });
 
+        // Set up editable cells for other columns
         descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         dateColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         incomeAmountColumn.setCellFactory(TextFieldTableCell.forTableColumn(new TwoDecimalDoubleConverter()));
         withholdingTaxColumn.setCellFactory(TextFieldTableCell.forTableColumn(new TwoDecimalDoubleConverter()));
 
+        // Income code edit validation - checks format and duplicates
         incomeCodeColumn.setOnEditCommit(e -> {
             String tempCode = e.getOldValue();
             String newCode = e.getNewValue();
             Records record = e.getRowValue().getRecord();
 
-            // First check if the new code format is valid
+            // Validate income code format
             record.setIncomeCode(newCode);
             if (!record.isIncomeCodeValid()) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -102,7 +107,7 @@ public class TableViewController implements Initializable {
                 return;
             }
 
-            // Then check for duplicates
+            // Check for duplicate income codes
             boolean isDuplicate = false;
             for (RecordsWrapper w : recordsTable.getItems()) {
                 if (w.getRecord() != record && w.getIncomeCode().equals(newCode)) {
@@ -119,16 +124,15 @@ public class TableViewController implements Initializable {
                 record.setIncomeCode(tempCode);
             }
 
-            // Always update checksum and refresh (this handles both success and failure cases)
             updateSingleRowChecksum(record);
         });
 
-
+        // Description edit validation - max 20 characters
         descriptionColumn.setOnEditCommit(e -> {
             String tempdescripiton = e.getOldValue();
             Records record = e.getRowValue().getRecord();
             record.setDescription(e.getNewValue());
-            if(record.getDescription().length()>20){  //if the description exceed the limit throws an alert and restore the old value in the same place
+            if(record.getDescription().length()>20){
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Exceeding 20 characters");
                 alert.setContentText("The description can not exceed 20 characters");
@@ -140,6 +144,7 @@ public class TableViewController implements Initializable {
             }
         });
 
+        // Date edit validation - DD/MM/YYYY format
         dateColumn.setOnEditCommit(e -> {
             String tempdate = e.getOldValue();
             Records record = e.getRowValue().getRecord();
@@ -156,6 +161,7 @@ public class TableViewController implements Initializable {
             }
         });
 
+        // Income amount edit validation - must be positive
         incomeAmountColumn.setOnEditCommit(e -> {
             Double tempIncomeAmount = e.getOldValue();
             Records record = e.getRowValue().getRecord();
@@ -183,6 +189,7 @@ public class TableViewController implements Initializable {
             updateSingleRowChecksum(record);
         });
 
+        // Custom cell display for valid column - shows checkmark or X
         validColumn.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Boolean item, boolean empty) {
@@ -200,6 +207,7 @@ public class TableViewController implements Initializable {
         recordsTable.refresh();
     }
 
+    // Converter for displaying doubles with 2 decimal places
     public class TwoDecimalDoubleConverter extends StringConverter<Double> {
         @Override
         public String toString(Double value) {
@@ -216,6 +224,7 @@ public class TableViewController implements Initializable {
         }
     }
 
+    // Populates table with records data and updates summary statistics
     public void setRecordsData(List<Records> recordsData) {
         ObservableList<RecordsWrapper> data = FXCollections.observableArrayList();
         int total = 0, valid = 0, invalid = 0;
@@ -236,22 +245,22 @@ public class TableViewController implements Initializable {
         validRecordCount.setText(String.valueOf(valid));
         invalidRecordCount.setText(String.valueOf(invalid));
 
-        // Set income totals
+        // Set formatted income totals
         DecimalFormat formatter = new DecimalFormat("#,##0.00");
         totalIncomeValue.setText(formatter.format(totalIncome));
         totalWithholdingTaxValue.setText(formatter.format(totalWHT));
     }
 
+    // Validates all records and displays detailed invalid reasons
     @FXML
     private void OnValidateButtonClick() {
         List<String> allInvalidReasons = new ArrayList<>();
 
         for (RecordsWrapper wrapper : recordsTable.getItems()) {
             Records r = wrapper.getRecord();
-            // to validate all fields
-            r.setValid();
+            r.setValid(); // Revalidate all fields
 
-            // If record is invalid, collect the specific reasons
+            // Collect specific validation errors
             if (!r.isValid()) {
                 List<String> recordInvalidReasons = new ArrayList<>();
 
@@ -271,13 +280,12 @@ public class TableViewController implements Initializable {
                     recordInvalidReasons.add("Invalid Checksum");
                 }
 
-                // Add record-specific reasons to the overall list
                 allInvalidReasons.add("Record " + (recordsTable.getItems().indexOf(wrapper) + 1) + ": " +
                         String.join(", ", recordInvalidReasons));
             }
         }
 
-        // Update the invalidReasons label
+        // Display validation results
         if (allInvalidReasons.isEmpty()) {
             invalidReasons.setText("All records are valid");
             invalidReasons.setStyle("-fx-text-fill: green;");
@@ -290,6 +298,7 @@ public class TableViewController implements Initializable {
         recordsTable.refresh();
     }
 
+    // Recalculates checksums for all records
     @FXML
     private void OnUpdateButtonClick() {
         for (RecordsWrapper wrapper : recordsTable.getItems()) {
@@ -300,9 +309,7 @@ public class TableViewController implements Initializable {
         }
     }
 
-//    public void tableEditUpdate(){
-//
-//    }
+    // Updates checksum for a single record after editing
     private void updateSingleRowChecksum(Records record) {
         int newChecksum = RecordsWrapper.calculateItemChecksum(
                 record.getIncomeCode(),
@@ -315,6 +322,7 @@ public class TableViewController implements Initializable {
         recordsTable.refresh();
     }
 
+    // Removes invalid records from the table
     @FXML
     private void OnDeleteButtonClick() {
         ObservableList<RecordsWrapper> validItems = FXCollections.observableArrayList();
@@ -326,6 +334,7 @@ public class TableViewController implements Initializable {
         setRecordsData(validItems.stream().map(RecordsWrapper::getRecord).toList());
     }
 
+    // Exports current table data to CSV file
     @FXML
     private void OnExportButtonClick(){
         String csvFile = csvName.getText();
@@ -354,6 +363,7 @@ public class TableViewController implements Initializable {
         }
     }
 
+    // Checks if an income code appears more than once in the table
     public boolean isIncomeCodeDuplicate(String incomeCode){
         int count = 0;
         for (int i = 0; i < recordsTable.getItems().size(); i++) {
@@ -367,6 +377,7 @@ public class TableViewController implements Initializable {
         return false;
     }
 
+    // Calculates tax payable based on income tax formula: (total income - 150,000) * 12% - withholding tax
     @FXML
     private void OnCalculateButtonClick(){
         ObservableList<RecordsWrapper> Items = FXCollections.observableArrayList();

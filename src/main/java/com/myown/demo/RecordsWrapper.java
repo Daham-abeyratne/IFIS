@@ -3,6 +3,7 @@ package com.myown.demo;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+// Wrapper class that provides additional functionality for Records objects
 public class RecordsWrapper {
     private final Records record;
 
@@ -35,6 +36,7 @@ public class RecordsWrapper {
         return record;
     }
 
+    // Calculates checksum by counting letters and digits, ignoring quotes, dots, and slashes
     public static int calculateStringChecksum(String dataString) {
         int uppercaseCount = 0;
         int lowercaseCount = 0;
@@ -43,7 +45,7 @@ public class RecordsWrapper {
         for (int i = 0; i < dataString.length(); i++) {
             char ch = dataString.charAt(i);
             if (ch == '"' || ch == '.' || ch == '/') {
-                continue;
+                continue; // Skip these characters
             }
             if (Character.isUpperCase(ch)) {
                 uppercaseCount++;
@@ -56,6 +58,7 @@ public class RecordsWrapper {
         return uppercaseCount + lowercaseCount + numbersDecimalsCount;
     }
 
+    // Creates data string with formatted amounts (2 decimal places) and calculates checksum
     public static int calculateItemChecksum(String incomeCode, String description, String date, double incomeAmount, double withHoldingTax) {
         NumberFormat nf = new DecimalFormat("#0.00"); // Force 2 decimal places
         String data = incomeCode + description + date + nf.format(incomeAmount) + nf.format(withHoldingTax);

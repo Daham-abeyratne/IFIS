@@ -16,11 +16,7 @@ public class Records {
         setIncomeAmount(incomeAmount);
         setWithHoldingTax(withHoldingTax);
         setChecksum(checksum);
-        setValid();
-    }
-
-    public static int calculateChecksum(String incomeCode, String description, String date, double incomeAmount, double withHoldingTax) {
-        return (incomeCode + description + date).length() + (int) (incomeAmount + withHoldingTax);
+        setValid(); // Validates all fields and sets the valid flag
     }
 
     public String getIncomeCode() { return incomeCode; }
@@ -65,6 +61,8 @@ public class Records {
 
     public boolean isValid() {
         return valid; }
+
+    // Validates all fields and sets the valid flag accordingly
     public void setValid() {
         if(isDescriptionValid() && isIncomeCodeValid() && isDateValid() && isChecksumValid() && isIncomeAmountValid()){
             this.valid = true;
@@ -73,11 +71,13 @@ public class Records {
         }
     }
 
+    // Verifies checksum against calculated value using RecordsWrapper
     public boolean isChecksumValid(){
         int calculatedChecksum = RecordsWrapper.calculateItemChecksum(getIncomeCode(), getDescription(), getDate(), getIncomeAmount(), getWithHoldingTax());
         return calculatedChecksum == checksum;
     }
 
+    // Description must not be null and max 20 characters
     public boolean isDescriptionValid(){
         if(this.description == null || this.description.length() > 20){
             return false;
@@ -86,6 +86,7 @@ public class Records {
         }
     }
 
+    // Income code must be exactly 5 characters with 2 letters and 3 digits
     public boolean isIncomeCodeValid(){
         if(this.incomeCode == null || this.incomeCode.length() !=5 ){
             return false;
@@ -99,7 +100,7 @@ public class Records {
                 letterCount++;
             } else if (Character.isDigit(ch)) {
                 digitCount++;
-            } else {       // invalid char
+            } else {       // invalid char (not letter or digit)
                 return false;
             }
         }
@@ -110,6 +111,7 @@ public class Records {
         }
     }
 
+    // Date must be in DD/MM/YYYY format
     public boolean isDateValid(){
         if(this.date == null || !this.date.matches("^\\d{2}/\\d{2}/\\d{4}$")){
             return false;
@@ -118,6 +120,7 @@ public class Records {
         }
     }
 
+    // Income amount must be positive
     public boolean isIncomeAmountValid(){
         if(this.incomeAmount <= 0 ){
             return false;

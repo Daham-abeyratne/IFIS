@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+// Main controller for CSV file import and initial data processing
 public class IFISController {
 
     @FXML
@@ -26,12 +27,13 @@ public class IFISController {
     @FXML
     private Label warning;
 
+    // Handles CSV file import - either from text field path or file chooser dialog
     @FXML
     private void onImportPathButtonClick() {
         String filePath = pathid.getText().trim();
 
         if (filePath.isEmpty()) {
-            // Open file chooser if no path is entered
+            // Show file chooser if no path entered
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Select CSV File");
             fileChooser.getExtensionFilters().add(
@@ -57,10 +59,7 @@ public class IFISController {
                 return;
             }
 
-            // Clear any previous warning
-            warning.setText("*");
-
-            // Open table view window
+            warning.setText("*"); // Clear warnings
             openTableViewWindow(recordsData);
 
         } catch (IOException e) {
@@ -70,6 +69,7 @@ public class IFISController {
         }
     }
 
+    // Parses CSV file and creates Records objects from each valid row
     public List<Records> parseCSV(String filePath) throws IOException {
         List<Records> recordsList = new ArrayList<>();
 
@@ -78,20 +78,19 @@ public class IFISController {
             boolean isFirstLine = true;
 
             while ((line = reader.readLine()) != null) {
-                // Skip header line
+                // Skip header row
                 if (isFirstLine) {
                     isFirstLine = false;
                     continue;
                 }
 
-                // Skip empty lines
                 if (line.trim().isEmpty()) {
-                    continue;
+                    continue; // Skip empty lines
                 }
 
-                // Parse CSV line
                 String[] values = parseCSVLine(line);
 
+                // Ensure minimum required columns (6: incomeCode, description, date, incomeAmount, withHoldingTax, checksum)
                 if (values.length >= 5) {
                     try {
                         String incomeCode = values[0].trim();
@@ -101,11 +100,10 @@ public class IFISController {
                         double withHoldingTax = Double.parseDouble(values[4].trim());
                         int checksum = Integer.parseInt(values[5].trim());
 
-                        // Create record with calculated checksum
                         Records record = new Records(incomeCode, description, date, incomeAmount, withHoldingTax, checksum);
                         recordsList.add(record);
                     } catch (NumberFormatException e) {
-                        // Skip invalid numeric data
+                        // Skip rows with invalid numeric data
                         System.err.println("Skipping invalid row: " + line);
                     }
                 }
@@ -115,6 +113,7 @@ public class IFISController {
         return recordsList;
     }
 
+    // Parses a single CSV line handling quoted values and commas within quotes
     public String[] parseCSVLine(String line) {
         List<String> values = new ArrayList<>();
         boolean inQuotes = false;
@@ -124,39 +123,36 @@ public class IFISController {
             char c = line.charAt(i);
 
             if (c == '"') {
-                inQuotes = !inQuotes;
+                inQuotes = !inQuotes; // Toggle quote state
             } else if (c == ',' && !inQuotes) {
                 values.add(currentValue.toString());
-                currentValue = new StringBuilder();
+                currentValue = new StringBuilder(); // Start new value
             } else {
                 currentValue.append(c);
             }
         }
 
-        // Add the last value
-        values.add(currentValue.toString());
-
+        values.add(currentValue.toString()); // Add final value
         return values.toArray(new String[0]);
     }
 
+    // Opens the table view window with imported records data
     private void openTableViewWindow(List<Records> recordsData) {
         try {
-            // Load the FXML file for the table view
             FXMLLoader loader = new FXMLLoader(getClass().getResource("IFIS-View.fxml"));
             Scene scene = new Scene(loader.load(), 950, 600);
 
-            // Get the controller and set the data
+            // Pass data to the table controller
             TableViewController controller = loader.getController();
             controller.setRecordsData(recordsData);
 
-            // Create new stage for table view
+            // Create modal window for table view
             Stage tableStage = new Stage();
             tableStage.setTitle("Income Records Table");
             tableStage.setScene(scene);
             tableStage.initModality(Modality.APPLICATION_MODAL);
             tableStage.setResizable(true);
 
-            // Show the window
             tableStage.show();
 
         } catch (IOException e) {
@@ -167,6 +163,4 @@ public class IFISController {
             e.printStackTrace();
         }
     }
-
-
 }
